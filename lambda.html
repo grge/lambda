@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<style>
+    body {
+        text-align: center;
+    }
+
+    h1 {
+        font-family:Palatino;
+        font-size: 40pt;
+
+    }
+
+    #output, #input {
+        width: 700px;
+        margin: 1em auto;
+        padding: 1em;
+        background: #fafafa;
+        border: 1px solid #bababa;
+        font-family: courier;
+        font-size:10pt;
+        text-align: left;
+        overflow: hidden;
+    }
+
+    #parse-indicator {
+        display: block;
+        float: left;
+        width: 20px;
+        height: 20px;
+    }
+
+    #parse-error-box {
+        text-align: left;
+        font-size: 8pt;
+
+    }
+
+    #diagram {
+        text-align: center;
+    }
+    #diagram div {
+        border-radius: 6px;
+        display: inline-block;
+        position:relative;
+        vertical-align: top;
+        margin: 10px 5px;
+        height: 10px;
+        background: black;
+    }
+    #variable {
+        width: 10px;
+        background: green;
+    }
+</style>
+<meta charset="utf-8">
+<title>λ Calculus</title>
+</head>
+<body>
+<h1>λ Calculus</h1>
+<pre id='input'>Test</pre>
+<p id='parse-error-box'></p>
+<pre id='output'></pre>
+<div id='diagram'></pre>
+<script type="text/javascript" src="lib/underscore.js"></script>
+<script type="text/javascript" src="lib/jquery.js"></script>
+<script type="text/javascript" src="lambda.js"></script>
+</body>
+</html>
