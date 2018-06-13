@@ -1,0 +1,76 @@
+body {
+    text-align: center;
+    font-family: sans-serif;
+}
+
+h1 {
+    font-size: 60pt;
+    margin-top: 30px;
+    margin-bottom: 20px;
+
+}
+
+.labeled-box {
+    width: 700px;
+    margin: 1em auto;
+    text-align: center;
+}
+
+.label {
+    margin: 10px 10px;
+    float: left;
+    width: auto;
+    font-size: 20pt;
+    text-align: right;
+}
+
+#output, #input, #parse-indicator, #parse-error-box {
+    padding: 1em;
+    border: 1px solid black;
+    font-family: courier;
+    font-size: 14pt;
+    text-align: left;
+    overflow: hidden;
+}
+
+#about {
+    text-align: left;
+    padding-left: 1em;
+    width: 700px;
+    margin: 1em auto 3em auto;
+}
+
+#parse-error-box{
+    text-align: right;
+    width: 700px;
+    height: 2em;
+    border: none;
+    border-bottom: 1px solid #cccccc;
+    padding: 0px;
+    margin: 0 auto;
+}
+
+#parse-indicator {
+    display: block;
+    float: left;
+    width: 20px;
+    height: 20px;
+}
+
+
+#diagram {
+    text-align: center;
+}
+#diagram div {
+    display: inline-block;
+    position:relative;
+    vertical-align: top;
+    margin: 11px 5px;
+    height: 10px;
+    border: 1px solid black;
+}
+#variable {
+    width: 10px;
+    margin: 1px;
+    background: black;
+}

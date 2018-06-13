@@ -167,6 +167,7 @@ var reduce = function(term) {
             switch (type(term.lambda)) {
                 case 'lambda':
                     var result = beta_reduction(term);
+                    print(to_text(result))
                     if (to_text(result) == to_text(term)) {
                         print("Loop detected... halting");
                         return result;

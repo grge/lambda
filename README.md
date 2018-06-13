@@ -3,6 +3,8 @@
 
 A lambda calculus parser and evaluator written in javascript.
 
+Try it: http://grge.github.io/lambda.js
+
 
 ## TODO:
 
