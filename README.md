@@ -1,13 +1,15 @@
 # lambda.js
 
 
-A lambda calculus parser and evaluator written in javascript.
+A lambda calculus parser and evaluator written in Elm.
 
-Try it: http://grge.github.io/lambda.js
-
+Try it: http://grge.github.io/lambda
 
 ## TODO:
 
+WARNING: This project is currently incomplete.
+
+* Fix parse issues and loop detection
 * Customizeable reduction methods (eta-reduction, applicative, lazy)
 * Step-by-step evaluation mode
 * Improve debugging by passing lexer offset references through to evaluator
