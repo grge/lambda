@@ -15,6 +15,28 @@ test_toText = describe "Tests for the toText function"
             Expect.equal (toText <| VarTerm (Var "longer")) "longer" 
     ]
 
+test_substitute : Test
+test_substitute = describe "Test the substitute function"
+    [ test "Substitute into matching VarTerm" <|
+        \_ ->
+            Expect.equal (VarTerm (Var "x"))
+                         (substitute (Var "y") (VarTerm (Var "x")) (VarTerm (Var "y")))
+    , test "Substitute into non-matching VarTerm" <|
+        \_ ->
+            Expect.equal (VarTerm (Var "x"))
+                         (substitute (Var "y") (VarTerm (Var "z")) (VarTerm (Var "x")))
+    , test "Substitute into LambdaTerm (capture avoiding)" <|
+        \_ ->
+            Expect.equal (LambdaTerm (Lambda (Var "x'") (VarTerm (Var "y"))))
+                         (substitute (Var "y")
+                                     (VarTerm (Var "x"))
+                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
+                         )
+
+
+
+    ]
+
 
 test_alphaConvert : Test
 test_alphaConvert = describe "Test alphaConvert function"

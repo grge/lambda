@@ -8431,23 +8431,53 @@ var _grge$lambda$Lambda$toText = function (term) {
 							')'))));
 	}
 };
-var _grge$lambda$Lambda$isFreeIn = F2(
+var _grge$lambda$Lambda$isFreshIn = F2(
 	function (v, t) {
 		var _p3 = t;
 		switch (_p3.ctor) {
 			case 'VarTerm':
-				return _elm_lang$core$Native_Utils.eq(v, _p3._0.name);
+				return !_elm_lang$core$Native_Utils.eq(v, _p3._0);
 			case 'LambdaTerm':
 				var _p4 = _p3._0;
-				return (!_elm_lang$core$Native_Utils.eq(v, _p4.bind.name)) && A2(_grge$lambda$Lambda$isFreeIn, v, _p4.body);
+				return _elm_lang$core$Native_Utils.eq(v, _p4.bind) || A2(_grge$lambda$Lambda$isFreshIn, v, _p4.body);
 			default:
 				var _p5 = _p3._0;
-				return A2(_grge$lambda$Lambda$isFreeIn, v, _p5.lambda) || A2(_grge$lambda$Lambda$isFreeIn, v, _p5.argument);
+				return A2(_grge$lambda$Lambda$isFreshIn, v, _p5.lambda) && A2(_grge$lambda$Lambda$isFreshIn, v, _p5.argument);
+		}
+	});
+var _grge$lambda$Lambda$isFreeIn = F2(
+	function (v, t) {
+		var _p6 = t;
+		switch (_p6.ctor) {
+			case 'VarTerm':
+				return _elm_lang$core$Native_Utils.eq(v, _p6._0);
+			case 'LambdaTerm':
+				var _p7 = _p6._0;
+				return (!_elm_lang$core$Native_Utils.eq(v, _p7.bind)) && A2(_grge$lambda$Lambda$isFreeIn, v, _p7.body);
+			default:
+				var _p8 = _p6._0;
+				return A2(_grge$lambda$Lambda$isFreeIn, v, _p8.lambda) || A2(_grge$lambda$Lambda$isFreeIn, v, _p8.argument);
 		}
 	});
 var _grge$lambda$Lambda$Var = function (a) {
 	return {name: a};
 };
+var _grge$lambda$Lambda$getFreshVar = F2(
+	function ($var, term) {
+		getFreshVar:
+		while (true) {
+			if (A2(_grge$lambda$Lambda$isFreshIn, $var, term)) {
+				return $var;
+			} else {
+				var _v3 = _grge$lambda$Lambda$Var(
+					A2(_elm_lang$core$Basics_ops['++'], $var.name, '\'')),
+					_v4 = term;
+				$var = _v3;
+				term = _v4;
+				continue getFreshVar;
+			}
+		}
+	});
 var _grge$lambda$Lambda$Lambda = F2(
 	function (a, b) {
 		return {bind: a, body: b};
@@ -8462,42 +8492,47 @@ var _grge$lambda$Lambda$ApplicationTerm = function (a) {
 var _grge$lambda$Lambda$LambdaTerm = function (a) {
 	return {ctor: 'LambdaTerm', _0: a};
 };
+var _grge$lambda$Lambda$VarTerm = function (a) {
+	return {ctor: 'VarTerm', _0: a};
+};
 var _grge$lambda$Lambda$substitute = F3(
-	function (term, match, replace) {
-		var sub = function (t) {
-			return A3(_grge$lambda$Lambda$substitute, t, match, replace);
-		};
-		var _p6 = term;
-		switch (_p6.ctor) {
+	function (match, replace, term) {
+		var sub = A2(_grge$lambda$Lambda$substitute, match, replace);
+		var _p9 = term;
+		switch (_p9.ctor) {
 			case 'VarTerm':
-				return _elm_lang$core$Native_Utils.eq(_p6._0, match) ? replace : term;
+				return _elm_lang$core$Native_Utils.eq(_p9._0, match) ? replace : term;
 			case 'ApplicationTerm':
-				var _p7 = _p6._0;
+				var _p10 = _p9._0;
 				return _grge$lambda$Lambda$ApplicationTerm(
 					{
-						lambda: sub(_p7.lambda),
-						argument: sub(_p7.argument)
+						lambda: sub(_p10.lambda),
+						argument: sub(_p10.argument)
 					});
 			default:
-				var _p8 = _p6._0;
-				return _elm_lang$core$Native_Utils.eq(match, _p8.bind) ? term : _grge$lambda$Lambda$LambdaTerm(
-					{
-						bind: _p8.bind,
-						body: sub(_p8.body)
-					});
+				var _p11 = _p9._0;
+				if (_elm_lang$core$Native_Utils.eq(match, _p11.bind)) {
+					return term;
+				} else {
+					var freshVar = A2(_grge$lambda$Lambda$getFreshVar, _p11.bind, replace);
+					var freshBody = A3(
+						_grge$lambda$Lambda$substitute,
+						_p11.bind,
+						_grge$lambda$Lambda$VarTerm(freshVar),
+						_p11.body);
+					return _grge$lambda$Lambda$LambdaTerm(
+						{bind: freshVar, body: freshBody});
+				}
 		}
 	});
 var _grge$lambda$Lambda$betaReduce = function (a) {
-	var _p9 = a.lambda;
-	if (_p9.ctor === 'LambdaTerm') {
-		var _p10 = _p9._0;
-		return A3(_grge$lambda$Lambda$substitute, _p10.body, _p10.bind, a.argument);
+	var _p12 = a.lambda;
+	if (_p12.ctor === 'LambdaTerm') {
+		var _p13 = _p12._0;
+		return A3(_grge$lambda$Lambda$substitute, _p13.bind, a.argument, _p13.body);
 	} else {
 		return _grge$lambda$Lambda$ApplicationTerm(a);
 	}
-};
-var _grge$lambda$Lambda$VarTerm = function (a) {
-	return {ctor: 'VarTerm', _0: a};
 };
 var _grge$lambda$Lambda$alphaConvert = F2(
 	function (lambda, replace) {
@@ -8506,50 +8541,50 @@ var _grge$lambda$Lambda$alphaConvert = F2(
 			replace,
 			A3(
 				_grge$lambda$Lambda$substitute,
-				lambda.body,
 				lambda.bind,
-				_grge$lambda$Lambda$VarTerm(replace)));
+				_grge$lambda$Lambda$VarTerm(replace),
+				lambda.body));
 	});
 var _grge$lambda$Lambda$reduce = function (term) {
 	reduce:
 	while (true) {
-		var _p11 = term;
-		switch (_p11.ctor) {
+		var _p14 = term;
+		switch (_p14.ctor) {
 			case 'VarTerm':
-				return _grge$lambda$Lambda$VarTerm(_p11._0);
+				return _grge$lambda$Lambda$VarTerm(_p14._0);
 			case 'LambdaTerm':
-				var _p12 = _p11._0;
+				var _p15 = _p14._0;
 				return _grge$lambda$Lambda$LambdaTerm(
 					{
-						bind: _p12.bind,
-						body: _grge$lambda$Lambda$reduce(_p12.body)
+						bind: _p15.bind,
+						body: _grge$lambda$Lambda$reduce(_p15.body)
 					});
 			default:
-				var _p14 = _p11._0;
-				var _p13 = _p14.lambda;
-				switch (_p13.ctor) {
+				var _p17 = _p14._0;
+				var _p16 = _p17.lambda;
+				switch (_p16.ctor) {
 					case 'LambdaTerm':
-						var out = _grge$lambda$Lambda$betaReduce(_p14);
+						var out = _grge$lambda$Lambda$betaReduce(_p17);
 						if (_elm_lang$core$Native_Utils.eq(out, term)) {
 							return out;
 						} else {
-							var _v6 = out;
-							term = _v6;
+							var _v9 = out;
+							term = _v9;
 							continue reduce;
 						}
 					case 'ApplicationTerm':
-						var _v7 = _grge$lambda$Lambda$ApplicationTerm(
+						var _v10 = _grge$lambda$Lambda$ApplicationTerm(
 							{
-								lambda: _grge$lambda$Lambda$reduce(_p14.lambda),
-								argument: _p14.argument
+								lambda: _grge$lambda$Lambda$reduce(_p17.lambda),
+								argument: _p17.argument
 							});
-						term = _v7;
+						term = _v10;
 						continue reduce;
 					default:
 						return _grge$lambda$Lambda$ApplicationTerm(
 							{
-								lambda: _p14.lambda,
-								argument: _grge$lambda$Lambda$reduce(_p14.argument)
+								lambda: _p17.lambda,
+								argument: _grge$lambda$Lambda$reduce(_p17.argument)
 							});
 				}
 		}
