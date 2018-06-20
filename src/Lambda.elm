@@ -1,5 +1,5 @@
 module Lambda exposing (Term(..), Var, Lambda, Application, toText,
-                        alphaConvert, reduce, substitute, isFreeIn)
+                        alphaConvert, reduce, substitute, isFreeIn, getFreshVar)
 
 type alias Var = { name : String }
 type alias Lambda = { bind : Var, body : Term }
@@ -60,7 +60,7 @@ substitute match replace term =
                         freshVar = getFreshVar l.bind replace
                         freshBody = substitute l.bind (VarTerm freshVar) l.body
                     in
-                        LambdaTerm { bind = freshVar, body = freshBody }
+                        LambdaTerm { bind = freshVar, body = sub freshBody }
 
 
 alphaConvert : Lambda -> Var -> Lambda

@@ -5,7 +5,7 @@ import Expect exposing (Expectation)
 
 import Parser exposing (parseVarTerm, parseSimpleTerm, parseTerm, ParseError, ParseResult)
 import Tokenizer exposing (Token, tokenize)
-import Lambda exposing (Term(..), Var, Lambda, toText)
+import Lambda exposing (Term(..), Var, Lambda, toText, reduce)
 
 type alias ParseResult = Result ParseError (Term, List Token)
 
@@ -47,7 +47,18 @@ test_testParser = describe "End-to-end tests of the parser." <|
         "x", 
         "(a)(b)",
         "λx.x",
-        "λx.λy.x",
-        "(λx.λy.x) b"
+        "λx.λy.x"
         ]
+
+test_reduce text_in text_out = 
+    case parseTerm <| tokenize text_in of
+        Ok (result, tokens) -> test text_in <| \_ -> Expect.equal text_out (toText <| reduce result)
+        Err err -> test text_in <| \_ -> Expect.equal err.message text_out
+
+test_end_to_end_reduce = describe "End-to-end tests of the parser and reducer." <|
+    [ test_reduce "x" "x"
+    , test_reduce "λx.x" "λx.x"
+    , test_reduce "(λx.x)a" "a"
+    -- , test_reduce "(((λx.λy.x)a)b" "a"
+    ]
 
