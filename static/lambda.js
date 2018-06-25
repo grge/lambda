@@ -8521,7 +8521,10 @@ var _grge$lambda$Lambda$substitute = F3(
 						_grge$lambda$Lambda$VarTerm(freshVar),
 						_p11.body);
 					return _grge$lambda$Lambda$LambdaTerm(
-						{bind: freshVar, body: freshBody});
+						{
+							bind: freshVar,
+							body: sub(freshBody)
+						});
 				}
 		}
 	});
@@ -8671,7 +8674,7 @@ var _grge$lambda$Parser$parseLambdaTerm = function (tokens) {
 					return _elm_lang$core$Result$Err(_p3._0);
 				}
 			} else {
-				return A2(_grge$lambda$Parser$parseErr, _p6.index, 'LambdaTerm does not begin with \'λ\' or \'\\\'');
+				return A2(_grge$lambda$Parser$parseErr, _p6.index, 'LambdaTerm is not of form \'λx.y\'');
 			}
 		} else {
 			return A2(_grge$lambda$Parser$parseErr, _p2._0.index, 'LambdaTerm is not of form \'λx.y\'');
@@ -8687,7 +8690,7 @@ var _grge$lambda$Parser$parseTerm = function (tokens) {
 		var _p9 = _p7._0._1;
 		var _p8 = _p9;
 		if (_p8.ctor === '::') {
-			return _elm_lang$core$Native_Utils.eq(_p8._0.string, ')') ? A2(_grge$lambda$Parser$parseOk, _p10, _p8._1) : A2(_grge$lambda$Parser$completeApplication, _p10, _p9);
+			return _elm_lang$core$Native_Utils.eq(_p8._0.string, ')') ? A2(_grge$lambda$Parser$parseOk, _p10, _p9) : A2(_grge$lambda$Parser$completeApplication, _p10, _p9);
 		} else {
 			return A2(
 				_grge$lambda$Parser$parseOk,
@@ -8714,29 +8717,53 @@ var _grge$lambda$Parser$completeApplication = F2(
 var _grge$lambda$Parser$parseSimpleTerm = function (tokens) {
 	var _p12 = tokens;
 	if (_p12.ctor === '::') {
-		var _p15 = _p12._0;
-		var _p13 = _p15.string;
+		var _p14 = _p12._0;
+		var _p13 = _p14.string;
 		switch (_p13) {
 			case 'λ':
 				return _grge$lambda$Parser$parseLambdaTerm(tokens);
 			case '\\':
 				return _grge$lambda$Parser$parseLambdaTerm(tokens);
 			case '(':
-				var _p14 = _p12._1;
-				if (_p14.ctor === '[]') {
-					return A2(_grge$lambda$Parser$parseErr, _p15.index, 'Unexpected end after (');
-				} else {
-					return _grge$lambda$Parser$parseTerm(_p14);
-				}
+				return _grge$lambda$Parser$parseParens(tokens);
 			case '.':
-				return A2(_grge$lambda$Parser$parseErr, _p15.index, 'Unexpected \'.\'');
+				return A2(_grge$lambda$Parser$parseErr, _p14.index, 'Unexpected \'.\'');
 			case ')':
-				return A2(_grge$lambda$Parser$parseErr, _p15.index, 'Unexpected \')\'');
+				return A2(_grge$lambda$Parser$parseErr, _p14.index, 'Unexpected \')\'');
 			default:
 				return _grge$lambda$Parser$parseVarTerm(tokens);
 		}
 	} else {
 		return A2(_grge$lambda$Parser$parseErr, 0, 'Couldn\'t parse simple Term from no tokens');
+	}
+};
+var _grge$lambda$Parser$parseParens = function (tokens) {
+	var _p15 = tokens;
+	if (_p15.ctor === '::') {
+		var _p20 = _p15._0;
+		var _p16 = _p20.string;
+		if (_p16 === '(') {
+			var _p17 = _grge$lambda$Parser$parseTerm(_p15._1);
+			if (_p17.ctor === 'Ok') {
+				if (_p17._0._1.ctor === '::') {
+					var _p19 = _p17._0._1._0;
+					var _p18 = _p19.string;
+					if (_p18 === ')') {
+						return A2(_grge$lambda$Parser$parseOk, _p17._0._0, _p17._0._1._1);
+					} else {
+						return A2(_grge$lambda$Parser$parseErr, _p19.index, 'Expected \')\'');
+					}
+				} else {
+					return A2(_grge$lambda$Parser$parseErr, 0, 'Expected \')\'');
+				}
+			} else {
+				return _elm_lang$core$Result$Err(_p17._0);
+			}
+		} else {
+			return A2(_grge$lambda$Parser$parseErr, _p20.index, 'Expected \'(\'');
+		}
+	} else {
+		return A2(_grge$lambda$Parser$parseErr, 0, 'Couldn\'t parse parenthesized term from no tokens');
 	}
 };
 
