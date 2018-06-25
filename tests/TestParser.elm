@@ -3,7 +3,7 @@ module TestParser exposing (..)
 import Test exposing (..)
 import Expect exposing (Expectation)
 
-import Parser exposing (parseVarTerm, parseSimpleTerm, parseTerm, ParseError, ParseResult)
+import Parser exposing (parseVarTerm, parseLambdaTerm, parseTerm, ParseError, ParseResult)
 import Tokenizer exposing (Token, tokenize)
 import Lambda exposing (Term(..), Var, Lambda, toText, reduce)
 
@@ -24,13 +24,10 @@ test_parseVarTerm = describe "Test parsing a VarTerm" <|
     ]
 
 
-test_parseSimpleTerm = describe "Test parsing a 'simple' Term." <|
-    [ test "Test parsing a word using parseSimpleTerm" <|
-        \_ -> Expect.equal (Ok (VarTerm (Var "word"), []))
-                         (parseSimpleTerm [(Token 0 "word")])
-    , test "Test parsing a lambda using parseSimpleTerm" <|
+test_parseLambdaTerm = describe "Test parsing a LambdaTerm." <|
+    [ test "Test parsing a lambda using parseSimpleTerm" <|
         \_ -> Expect.equal (Ok (LambdaTerm (Lambda (Var "x") (VarTerm (Var "x"))), []))
-                         (parseSimpleTerm [(Token 0 "\\")
+                         (parseLambdaTerm [(Token 0 "\\")
                                           ,(Token 1 "x")
                                           ,(Token 2 ".")
                                           ,(Token 3 "x")
@@ -46,8 +43,12 @@ test_testParser = describe "End-to-end tests of the parser." <|
     List.map test_self_eq [
         "x", 
         "(a)(b)",
+        "((a)(b))(c)",
+        "(a)((b)(c))",
         "λx.x",
-        "λx.λy.x"
+        "λx.λy.x",
+        "(λx.x)(a)",
+        "(λx.λy.x)(a)"
         ]
 
 test_reduce text_in text_out = 
@@ -59,6 +60,7 @@ test_end_to_end_reduce = describe "End-to-end tests of the parser and reducer." 
     [ test_reduce "x" "x"
     , test_reduce "λx.x" "λx.x"
     , test_reduce "(λx.x)a" "a"
-    -- , test_reduce "(((λx.λy.x)a)b" "a"
+    , test_reduce "(λx.λy.x)a" "λy.a"
+    , test_reduce "((λx.λy.x)a)b" "a"
     ]
 

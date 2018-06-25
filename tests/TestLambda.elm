@@ -27,63 +27,48 @@ test_substitute = describe "Test the substitute function"
                          (substitute (Var "y") (VarTerm (Var "z")) (VarTerm (Var "x")))
     , test "Substitute into LambdaTerm with no match" <|
         \_ ->
-            Expect.equal (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
-                         (substitute (Var "z")
+            Expect.equal (LambdaTerm (Lambda (Var "y") (VarTerm (Var "z"))))
+                         (substitute (Var "x")
                                      (VarTerm (Var "a"))
-                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
-                         )
+                                     (LambdaTerm (Lambda (Var "y") (VarTerm (Var "z")))))
     , test "Substitute into LambdaTerm with bind match" <|
         \_ ->
             Expect.equal (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
                          (substitute (Var "x")
                                      (VarTerm (Var "y"))
-                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
-                         )
+                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y")))))
     , test "Substitute into LambdaTerm with body match" <|
         \_ ->
             Expect.equal (LambdaTerm (Lambda (Var "x") (VarTerm (Var "a"))))
                          (substitute (Var "y")
                                      (VarTerm (Var "a"))
-                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
-                         )
-    , test "Substitute into deep LambdaTerm (capture avoiding)" <|
+                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y")))))
+    , test "Substitute into LambdaTerm with body match and avoid capturing" <|
         \_ ->
-            Expect.equal (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y"))))
+            Expect.equal (LambdaTerm (Lambda (Var "x'") (VarTerm (Var "x"))))
+                         (substitute (Var "y")
+                                     (VarTerm (Var "x"))
+                                     (LambdaTerm (Lambda (Var "x") (VarTerm (Var "y")))))
+    , test "Substitute into deep LambdaTerm" <|
+        \_ ->
+            Expect.equal (LambdaTerm { bind = Var "x"
+                                     , body = (LambdaTerm { bind = Var "y"
+                                                          , body = VarTerm (Var "a")})})
                          (substitute (Var "z")
-Success! Compiled 1 module.
-Successfully generated /dev/null
-Success! Compiled 1 module.
-Successfully generated /home/george/code/lambda/elm-stuff/generated-code/elm-community/elm-test/elmTestOutput.js
-
-elm-test 0.18.12
-----------------
-
-Running 34 tests. To reproduce these results, run: elm-test --fuzz 100 --seed 26013454
-
-↓ TestLambda
-↓ Test the substitute function
-✗ Substitute into deep LambdaTerm (capture avoiding)
-
-                                   ▼            ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼                  ▼     ▼▼
-    LambdaTerm { bind = { name = "x'" }, body = LambdaTerm { bind = { name = "y" }, body = VarTerm { name = "x" } } }
-    ╷
-    │ Expect.equal
-    ╵
-    LambdaTerm { bind = { name = "x" }, body = VarTerm { name = "y" } }
-                                                                 ▲     
-
-
-
-TEST RUN FAILED
-
-Duration: 180 ms
-Passed:   33
-Failed:   1
-
+                                     (VarTerm (Var "a"))
                                      (LambdaTerm { bind = Var "x"
                                                  , body = (LambdaTerm { bind = Var "y"
-                                                                      , body = VarTerm (Var "z")})})
-                         )
+                                                                      , body = VarTerm (Var "z")})}))
+    , test "Substitute into deep LambdaTerm with matching bind" <|
+        \_ ->
+            Expect.equal (LambdaTerm { bind = Var "x"
+                                     , body = (LambdaTerm { bind = Var "y"
+                                                          , body = VarTerm (Var "z")})})
+                         (substitute (Var "y")
+                                     (VarTerm (Var "z"))
+                                     (LambdaTerm { bind = Var "x"
+                                                 , body = (LambdaTerm { bind = Var "y"
+                                                                      , body = VarTerm (Var "z")})}))
     ]
 
 test_alphaConvert : Test
@@ -98,6 +83,26 @@ test_alphaConvert = describe "Test alphaConvert function"
                 Expect.equal (alphaConvert arg new_var) out
     ]
         
+test_betaReduce : Test
+test_betaReduce = describe "Test the betaReduce function"
+    [ test "Test simple application betaReduce" <|
+        \_ ->
+            Expect.equal (VarTerm (Var "y"))
+                         (betaReduce 
+                            { lambda = LambdaTerm
+                                            { bind = Var "x"
+                                            , body = VarTerm (Var "x")}
+                            , argument = VarTerm (Var "y")})
+    , test "Test nested lambda" <|
+        \_ ->
+            Expect.equal (LambdaTerm { bind = Var "y", body = VarTerm (Var "a")})
+                         (betaReduce 
+                            { lambda = LambdaTerm
+                                            { bind = Var "x"
+                                            , body = LambdaTerm { bind = Var "y"
+                                                                , body = VarTerm (Var "x")}}
+                            , argument = VarTerm (Var "a")})
+    ]
 
 test_getFreshVar : Test
 test_getFreshVar = describe "test getFreshVar function" 

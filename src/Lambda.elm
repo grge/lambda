@@ -1,5 +1,5 @@
 module Lambda exposing (Term(..), Var, Lambda, Application, toText,
-                        alphaConvert, reduce, substitute, isFreeIn, getFreshVar)
+                        alphaConvert, betaReduce, reduce, substitute, isFreeIn, getFreshVar)
 
 type alias Var = { name : String }
 type alias Lambda = { bind : Var, body : Term }
