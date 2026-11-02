@@ -33,6 +33,17 @@ h1 {
     overflow: hidden;
 }
 
+#output {
+    white-space: pre-wrap;
+    word-break: break-all;
+    min-height: 1.2em;
+}
+
+#input {
+    box-sizing: border-box;
+    width: 566px;
+}
+
 #about {
     text-align: left;
     padding-left: 1em;

@@ -9,5 +9,7 @@ makeToken match = Token match.index match.match
 
 tokenize : String -> List Token
 tokenize str =
-    let rx = Regex.regex "[.\\\\\\λ\\(\\)]|((\\w|\\')+)" in
-        List.map makeToken <| Regex.find Regex.All rx str
+    let
+        rx = Regex.fromString "[.\\\\\\λ\\(\\)]|((\\w|\\')+)" |> Maybe.withDefault Regex.never
+    in
+        List.map makeToken <| Regex.find rx str

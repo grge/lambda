@@ -1,6 +1,6 @@
 module Parser exposing (..)
 
-import Lambda exposing (Term(VarTerm, ApplicationTerm, LambdaTerm), Application, Lambda, Var)
+import Lambda exposing (Term(..), Application, Lambda, Var)
 import Tokenizer exposing (Token)
 
 import Regex
@@ -25,7 +25,7 @@ parseVarTerm tokens =
     case tokens of
         token :: rest ->
             let 
-                rx = Regex.regex "^(\\w|\\')+$"
+                rx = Regex.fromString "^(\\w|\\')+$" |> Maybe.withDefault Regex.never
             in
                 if Regex.contains rx token.string then
                     parseOk (VarTerm (Var token.string)) rest
@@ -41,13 +41,13 @@ parseParens tokens =
             case first.string of
                 "(" ->
                     case parseTerm rest of
-                        Ok (term, next :: rest) ->
+                        Ok (term, next :: after) ->
                             case next.string of
-                                ")" -> parseOk term rest
+                                ")" -> parseOk term after
                                 _ -> parseErr next.index "Expected ')'"
                         Ok (term, []) ->
                             parseErr 0 "Expected ')'"
-                        Err err -> 
+                        Err err ->
                             Err err
                 _ -> 
                     parseErr first.index "Expected '('"
@@ -66,7 +66,7 @@ parseSimpleTerm tokens =
                 ")" -> parseErr token.index "Unexpected ')'"
                 _ -> parseVarTerm tokens
         [] ->
-            parseErr 0 "Couldn't parse simple Term from no tokens"
+            parseErr 0 "Unexpected end of input"
 
 parseLambdaTerm : List Token -> ParseResult
 parseLambdaTerm tokens =
@@ -92,25 +92,35 @@ parseLambdaTerm tokens =
 
 completeApplication : Term -> List Token -> ParseResult
 completeApplication term tokens =
-    case parseTerm tokens of
-        Ok (argument, rest)->
-            parseOk (ApplicationTerm (Application term argument)) rest
-        Err err ->
-            Err err
+    case tokens of
+        [] ->
+            parseOk term []
+        next :: _ ->
+            if next.string == ")" then
+                parseOk term tokens
+            else
+                case parseSimpleTerm tokens of
+                    Ok (argument, rest) ->
+                        completeApplication (ApplicationTerm (Application term argument)) rest
+                    Err err ->
+                        Err err
 
 
 parseTerm : List Token -> ParseResult
 parseTerm tokens =
     case parseSimpleTerm tokens of
         Ok (term, rest) ->
-            case rest of
-                car :: cdr ->
-                    if car.string == ")" then
-                        parseOk term rest
-                    else
-                        completeApplication term rest
-                [] ->
-                    parseOk term []
+            completeApplication term rest
         Err err ->
             Err err
 
+
+parseAll : List Token -> Result ParseError Term
+parseAll tokens =
+    case parseTerm tokens of
+        Ok (term, []) ->
+            Ok term
+        Ok (_, next :: _) ->
+            parseErr next.index ("Unexpected '" ++ next.string ++ "'")
+        Err err ->
+            Err err

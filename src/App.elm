@@ -1,54 +1,58 @@
-module App exposing (..)
+module App exposing (main)
 
-import Json.Decode
-import Regex exposing (regex, replace, HowMany(All))
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, on, keyCode)
+import Html.Events exposing (onInput)
 
-import Parser exposing (parseTerm)
+import Parser exposing (parseAll)
 import Tokenizer exposing (tokenize)
 import Lambda exposing (toText, reduce)
 
-main = Html.beginnerProgram { model = model, view = view, update = update }
+main = Browser.sandbox { init = init, view = view, update = update }
 
 type alias Model = { input : String, output : String }
 
-model : Model
-model = { input = "", output = "" }
+init : Model
+init = { input = "", output = "" }
 
 
 type Msg = Change String
+
+evaluate : String -> String
+evaluate source =
+    case tokenize source of
+        [] ->
+            ""
+        tokens ->
+            case parseAll tokens of
+                Ok term ->
+                    case reduce term of
+                        Ok normal -> toText normal
+                        Err partial -> "Gave up: this may have no normal form. Reached:\n" ++ toText partial
+                Err {message} ->
+                    message
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         Change newContent ->
-            let 
-                result = parseTerm <| tokenize newContent
-            in
-                case result of
-                    Ok (term, _) -> { model | output = toText <| reduce term }
-                    Err {position, message} -> { model | output = message } 
-
-onKeyPress : (Int -> msg) -> Attribute msg
-onKeyPress tagger =
-    on "keypress" (Json.Decode.map tagger keyCode)
+            { model | input = newContent, output = evaluate newContent }
 
 view : Model -> Html Msg
 view model =
     div []
       [ h1 [] [text "λ-CALCULUS"]
-      , div [id "about"] 
-          [ p [] 
-            [text "λ-calculus interpreter written in javascript — backslash \\ inserts a lambda"]
+      , div [id "about"]
+          [ p []
+            [text "λ-calculus interpreter written in Elm — type a backslash \\ for λ"]
           ]
-      , div [class "labeled-box"] 
+      , div [class "labeled-box"]
           [ div [class "label"] [text "INPUT:"]
-          , input [id "input", placeholder "\\x.x", onInput Change] [text model.input]
+          , input [id "input", placeholder "(\\x.\\y.x) a b", onInput Change, value model.input] []
           ]
       , div [id "parse-error-box"] []
-      , div [class "labeled-box"] 
+      , div [class "labeled-box"]
           [ div [class "label"] [text "OUTPUT:"]
           , pre [id "output"] [text model.output]
           ]
